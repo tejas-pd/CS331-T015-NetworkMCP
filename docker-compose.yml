@@ -1,0 +1,9 @@
+services:
+  network-assistant:
+    build: .
+    environment:
+      NETWORK_ASSISTANT_EXECUTE: "0"
+    stdin_open: true
+    tty: true
+    # Enable only in an isolated lab after review:
+    # cap_add: [NET_ADMIN, NET_RAW]

@@ -1,0 +1,17 @@
+allowed_networks:
+  - 10.0.0.0/8
+  - 172.16.0.0/12
+  - 192.168.0.0/16
+
+protected_ips:
+  - 127.0.0.1
+  - 192.168.1.1
+
+allowed_interfaces:
+  - eth0
+  - ens33
+  - enp0s3
+  - wlo1
+
+min_bandwidth_mbps: 1
+max_bandwidth_mbps: 100
