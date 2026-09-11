@@ -6,14 +6,18 @@ import os
 from pathlib import Path
 
 from fastmcp import Client
-from fastmcp.client.transports import StdioTransport
+from fastmcp.client.transports import StreamableHttpTransport
 from ollama import AsyncClient
 
 
 ROOT = Path(__file__).resolve().parent
-SERVER = ROOT / "server" / "mcp_server.py"
 
 MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")
+
+MCP_SERVER_URL = os.getenv(
+    "MCP_SERVER_URL",
+    "http://localhost:8000/mcp"
+)
 
 
 SYSTEM_PROMPT = """
@@ -244,7 +248,7 @@ async def process_request(
           ↓
         FastMCP client
           ↓
-        MCP server
+        MCP server running in Docker
           ↓
         Network tool
           ↓
@@ -351,7 +355,7 @@ async def process_request(
             # 4. CALL MCP SERVER
             # =================================================
 
-            print("[MCP CLIENT] Calling MCP server...")
+            print("[MCP CLIENT] Calling Dockerized MCP server...")
 
             try:
 
@@ -399,7 +403,7 @@ async def main():
     print("=" * 60)
 
     print(f"LLM: {MODEL}")
-    print(f"MCP Server: {SERVER}")
+    print(f"MCP Server: {MCP_SERVER_URL}")
     print()
 
     # ------------------------------------------------------
@@ -412,33 +416,12 @@ async def main():
     # MCP CLIENT
     # ------------------------------------------------------
     #
-    # IMPORTANT:
-    #
-    # FastMCP starts the MCP server as a separate subprocess.
-    # The subprocess does not automatically inherit the
-    # environment variable NETWORK_ASSISTANT_EXECUTE.
-    #
-    # Therefore we explicitly pass it through StdioTransport.
-    #
-    # This is what allows:
-    #
-    #     export NETWORK_ASSISTANT_EXECUTE=1
-    #
-    # in the main terminal to reach mcp_server.py.
+    # The MCP server runs separately inside Docker.
+    # The assistant connects to it using Streamable HTTP.
     # ------------------------------------------------------
 
-    mcp_env = {
-        "NETWORK_ASSISTANT_EXECUTE": os.getenv(
-            "NETWORK_ASSISTANT_EXECUTE",
-            "0",
-        )
-    }
-
-    mcp_transport = StdioTransport(
-        command="python",
-        args=[str(SERVER)],
-        env=mcp_env,
-        cwd=str(ROOT),
+    mcp_transport = StreamableHttpTransport(
+        url=MCP_SERVER_URL
     )
 
     mcp_client = Client(mcp_transport)
